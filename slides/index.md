@@ -8,23 +8,32 @@
 
 ### March 28th, 2016
 
-- id : problem
+#### Problem
 
 - Client complain that leave application data, such as dates, leave hours, etc... takes a lot of time
 - After investigation I found that Leave Data table OnUpdate triggers takes considerable time to execute
 - Key issue is that each time user updates leave data, system needs to recalculate leave balances, as well as other data
+
+---
+
+#### Current System Synchronous workflow
 
 ![Synchronous](images/synchronous.png)
 
 ---
 
-- id : solution
+#### Solution
 
-- Client complain that leave application data, such as dates, leave hours, etc... takes a lot of time
-- After investigation I found that Leave Data table OnUpdate triggers takes considerable time to execute
-- Key issue is that each time user updates leave data, system needs to recalculate leave balances, as well as other data
+- Take5People implements Service Broker services, which is part of SQL Server 2008 and above
+- Complicated calculation logic, which was part of Database Leave Detail Table OnUpdate Trigger will move to independent Stored Procedure
+-- SQL Server will asynchroniously call given stored procedure when a new update message arrives
 
-![Synchronous](images/asynchronous.png)
+
+---
+
+#### Next generation system workflow
+
+![Asynchronous](images/asynchronous.png)
 
 ---
 
