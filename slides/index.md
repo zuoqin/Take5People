@@ -98,8 +98,7 @@ Enable broker for given database:
 ***
 
 ### March 29th, 2016
-- id : 20160329
 
-![Reactive Manifesto](images/responsive-manifesto.svg)
+- To test memory optimization solution for SQL 2014
 
 ***
