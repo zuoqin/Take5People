@@ -59,11 +59,11 @@
 <li>Key issue is that each time user updates leave data, system needs to recalculate leave balances, as well as other data</li>
 </ul>
 </section>
-<section >
+<section id="synchronous20160328">
 <h4>Current System Synchronous workflow</h4>
 <p><img src="images/synchronous.png" alt="Synchronous" /></p>
 </section>
-<section >
+<section id="asynchronous20160328">
 <h4>Solution</h4>
 <ul>
 <li>Take5People implements Service Broker services, which is part of SQL Server 2008 and above</li>
@@ -73,82 +73,96 @@ Complicated calculation logic, which was part of Database Leave Detail Table OnU
 </li>
 </ul>
 </section>
-<section >
+<section id="workflow20160328">
 <h4>Next generation system workflow</h4>
 <p><img src="images/asynchronous.png" alt="Asynchronous" /></p>
+</section>
+<section id="keys1_20160328">
+<h4>Key questions</h4>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="sql"><span class="k">select</span> * <span class="k">from</span> sys.transmission_queue 
+</code></pre></td></tr></table>
+<p>to see the messages in the transmission queue and to find if an error occured</p>
+<p>Enable broker for given database:</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="sql"><span class="k">ALTER</span> <span class="k">DATABASE</span> test <span class="k">SET</span> SINGLE_USER <span class="k">WITH</span> <span class="k">ROLLBACK</span> <span class="k">IMMEDIATE</span>
+<span class="k">GO</span>
+<span class="k">ALTER</span> <span class="k">DATABASE</span> test <span class="k">SET</span> ENABLE_BROKER
+<span class="k">ALTER</span> <span class="k">DATABASE</span> test <span class="k">SET</span> MULTI_USER <span class="k">WITH</span> <span class="k">ROLLBACK</span> <span class="k">IMMEDIATE</span>
+<span class="k">GO</span>
+</code></pre></td></tr></table>
+</section>
+<section id="keys2_20160328">
+<h4>Creating TARGET queue &amp; define message</h4>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="sql"><span class="k">CREATE</span> MESSAGE TYPE [//t<span class="n">5</span>p.hk/Leave/UpdateLeave];
+<span class="k">CREATE</span> MESSAGE TYPE [//t<span class="n">5</span>p.hk/Leave/LeaveUpdated];
+<span class="k">CREATE</span> CONTRACT [//t<span class="n">5</span>p.hk/Leave/UpdateLeaveContract]
+([//t<span class="n">5</span>p.hk/Leave/UpdateLeave] SENT <span class="k">BY</span> INITIATOR,
+[//t<span class="n">5</span>p.hk/Leave/LeaveUpdated] SENT <span class="k">BY</span> TARGET);
+<span class="k">CREATE</span> SERVICE [//t<span class="n">5</span>p.hk/LeaveDataService] <span class="k">ON</span> QUEUE dbo.LeaveDataQueue
+([//t<span class="n">5</span>p.hk/Leave/UpdateLeaveContract]);
+<span class="k">CREATE</span> SERVICE [//t<span class="n">5</span>p.hk/LeaveTriggerService] <span class="k">ON</span> QUEUE dbo.LeaveDataQueue
+([//t<span class="n">5</span>p.hk/Leave/UpdateLeaveContract]);  
+<span class="k">CREATE</span> <span class="k">PROCEDURE</span> dbo.usp_LeaveUpdateProc <span class="k">AS</span>
+  <span class="k">RETURN</span> <span class="n">0</span>;
+<span class="k">GO</span>  
+<span class="k">CREATE</span> QUEUE dbo.LeaveDataQueue <span class="k">WITH</span> ACTIVATION (
+PROCEDURE_NAME = dbo.usp_LeaveUpdateProc, MAX_QUEUE_READERS = <span class="n">2</span>,
+<span class="k">EXECUTE</span> <span class="k">AS</span> SELF);
+</code></pre></td></tr></table>
+</section>
+<section id="keys3_20160328">
+<h4>Creating INITIATOR queue &amp; define message</h4>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+<span class="l">6: </span>
+<span class="l">7: </span>
+<span class="l">8: </span>
+<span class="l">9: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="sql"><span class="k">CREATE</span> <span class="k">PROCEDURE</span> dbo.usp_LeaveUpdateProc<span class="n">2</span> <span class="k">AS</span>
+  <span class="k">RETURN</span> <span class="n">0</span>;
+<span class="k">GO</span>  
+<span class="k">CREATE</span> QUEUE dbo.LeaveTriggerQueue <span class="k">WITH</span> ACTIVATION (
+PROCEDURE_NAME = dbo.usp_LeaveUpdateProc<span class="n">2</span>, MAX_QUEUE_READERS = <span class="n">2</span>,
+<span class="k">EXECUTE</span> <span class="k">AS</span> SELF);
+
+<span class="k">CREATE</span> SERVICE [//t<span class="n">5</span>p.hk/LeaveTriggerService] <span class="k">ON</span> QUEUE dbo.LeaveTriggerQueue
+([//t<span class="n">5</span>p.hk/Leave/UpdateLeaveContract]);    
+</code></pre></td></tr></table>
 </section>
 </section>
 <section >
 <h3>March 29th, 2016</h3>
+<ul>
+<li>id : 20160329</li>
+</ul>
 <p><img src="images/responsive-manifesto.svg" alt="Reactive Manifesto" /></p>
-</section>
-<section >
-<h3>WebSharper</h3>
-<ul>
-<li>More productive with less code</li>
-<li>A fundamentally different web framework for developing functional and reactive .NET applications</li>
-<li>Markup-driven, strongly-typed reactive applications in minutes</li>
-</ul>
-</section>
-<section >
-<h3>AKKA</h3>
-<ul>
-<li>Scalable, distributed real-time transaction processing</li>
-<li>Fault Tolerance</li>
-<li>Location Transparency</li>
-<li>Persistence</li>
-</ul>
-</section>
-<section >
-<section >
-<h3>Heroku</h3>
-<ul>
-<li>Heroku is a platform as a service (PaaS)</li>
-</ul>
-<p><img src="images/heroku.png" alt="Heroku" /></p>
-</section>
-<section id="Heroku-1">
-<h4>Cloud</h4>
-<ul>
-<li>enables developers to build and run applications entirely in the cloud</li>
-<li>it’s the best platform for building with modern architectures, innovating quickly, and scaling precisely to meet demand</li>
-</ul>
-<p><img src="images/startup.png" alt="Heroku Cloud" /></p>
-</section>
-<section id="Heroku-2">
-<h4>Focus</h4>
-<ul>
-<li>Heroku handles the hard stuff — patching and upgrading, 24/7 ops and security, build systems, failovers, and more — so your developers can stay focussed on building great apps</li>
-</ul>
-<p><img src="images/focus.png" alt="Heroku Support" /></p>
-</section>
-<section id="Heroku-3">
-<h4>Ecosystem</h4>
-<ul>
-<li>Powerful platform, unparalleled ecosystem</li>
-<li>it’s the best platform for building with modern architectures, innovating quickly, and scaling precisely to meet demand</li>
-</ul>
-<p><img src="images/ecosystem.png" alt="Heroku Architecture" /></p>
-</section>
-<section id="Heroku-4">
-<h4>Applications</h4>
-<ul>
-<li>Today every company needs apps to engage their customers and run their businesses. Step up your ability to build, manage, and deploy great apps at scale with Heroku.</li>
-</ul>
-<p><img src="images/apps.png" alt="Heroku Applications" /></p>
-</section>
-</section>
-<section >
-<h3>System Workflow</h3>
-<p><img src="images/workflow.png" alt="System Workflow" /></p>
-</section>
-<section >
-<h3>The Reality of a Developer's Life</h3>
-<p><strong>When I show my boss that I've fixed a bug:</strong></p>
-<p><img src="http://www.topito.com/wp-content/uploads/2013/01/code-07.gif" alt="When I show my boss that I've fixed a bug" /></p>
-<p><strong>When your regular expression returns what you expect:</strong></p>
-<p><img src="http://www.topito.com/wp-content/uploads/2013/01/code-03.gif" alt="When your regular expression returns what you expect" /></p>
-<p><em>from <a href="http://server.dzone.com/articles/reality-developers-life-gifs">The Reality of a Developer's Life - in GIFs, Of Course</a></em></p>
 </section>
 
 
