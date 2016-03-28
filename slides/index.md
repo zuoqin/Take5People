@@ -100,5 +100,6 @@ Enable broker for given database:
 ### March 29th, 2016
 
 - To test memory optimization solution for SQL 2014
+- To share results during meeting with a client
 
 ***

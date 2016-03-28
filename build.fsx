@@ -146,8 +146,13 @@ Target "ReleaseSlides" (fun _ ->
     CleanDir tempDocsDir
     Repository.cloneSingleBranch "" (gitHome + "/" + gitProjectName + ".git") "gh-pages" tempDocsDir
 
+    System.Console.ReadKey() |> ignore
+
     fullclean tempDocsDir
     CopyRecursive outDir tempDocsDir true |> tracefn "%A"
+
+    System.Console.ReadKey() |> ignore
+    
     StageAll tempDocsDir
     Git.Commit.Commit tempDocsDir "Update generated slides"
     Branches.push tempDocsDir
