@@ -10,6 +10,8 @@
 
 #### Problem
 
+[open link](https://github.com/zuoqin/Take5People/blob/master/slides/2016/March/index.md)
+
 - Client complain that leave application data, such as dates, leave hours, etc... takes a lot of time
 - After investigation I found that Leave Data table OnUpdate triggers takes considerable time to execute
 - Key issue is that each time user updates leave data, system needs to recalculate leave balances, as well as other data
