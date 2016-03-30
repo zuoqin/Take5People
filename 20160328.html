@@ -61,7 +61,7 @@
 </section>
 <section id="synchronous20160328">
 <h4>Current System Synchronous workflow</h4>
-<p><img src="images/synchronous.png" alt="Synchronous" /></p>
+<p><img src="../../images/synchronous.png" alt="Synchronous" /></p>
 </section>
 <section id="asynchronous20160328">
 <h4>Solution</h4>
@@ -75,7 +75,7 @@ Complicated calculation logic, which was part of Database Leave Detail Table OnU
 </section>
 <section id="workflow20160328">
 <h4>Next generation system workflow</h4>
-<p><img src="images/asynchronous.png" alt="Asynchronous" /></p>
+<p><img src="../../images/asynchronous.png" alt="Asynchronous" /></p>
 </section>
 <section id="keys1_20160328">
 <h4>Key questions</h4>
@@ -155,14 +155,6 @@ PROCEDURE_NAME = dbo.usp_LeaveUpdateProc<span class="n">2</span>, MAX_QUEUE_READ
 <span class="k">CREATE</span> SERVICE [//t<span class="n">5</span>p.hk/LeaveTriggerService] <span class="k">ON</span> QUEUE dbo.LeaveTriggerQueue
 ([//t<span class="n">5</span>p.hk/Leave/UpdateLeaveContract]);    
 </code></pre></td></tr></table>
-</section>
-<section id="keys4_20160328">
-<h4>Main problem with asynchronous solution</h4>
-<ul>
-<li>User has sent an update leave message, but when it will be updated?</li>
-<li>We have no control anymore on "WHEN"</li>
-</ul>
-<p><img src="images/question.jpg" alt="Problem" /></p>
 </section>
 </section>
 <section >
