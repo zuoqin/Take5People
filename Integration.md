@@ -31,10 +31,17 @@
 * Incremental data
 * Complleted data sets, including all data
 
-### Supported logging & reporting
+## Supported logging & reporting
 
 * Email
 * log file
 * Database table log
 * Customized log output through external component
 
+## Security considerations
+
+* Executed under authorized user
+* Executed under given administrative priviledges setup by administrator
+* SQL Server security transparent
+* External datasource security transparent
+* SSL communication supported
